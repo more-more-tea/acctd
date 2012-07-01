@@ -1,0 +1,5 @@
+Are you still bothered by the daily cost? acctd may help you.
+
+To use the full functionality, you must have `sqlite` and `gnuplot` installed.
+
+The most important point, acctd runs in *nix environment.
