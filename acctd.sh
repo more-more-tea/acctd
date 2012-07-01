@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+# set -x
 
 DBMS=sqlite3
 GNUPLOT=gnuplot
@@ -136,7 +136,6 @@ while [ 1 ]; do
     message
     read OPTION
     OPTION=`uppercase $OPTION`
-    echo $OPTION
     # fresh parameters
     income=0
     cost=0
@@ -150,8 +149,9 @@ while [ 1 ]; do
             date=`date +"%Y-%m-%d"`
             echo -n "How much then: "
             read income
+            echo
             insert_entry $income $cost "$cate" "$details" $date
-            if [ $? ]
+            if [ $? -ne 0 ]
             then
                 echo "Sorry cannot do that, there must be something wrong."
             else
@@ -160,18 +160,15 @@ while [ 1 ]; do
            ;;
         "C")
             get_date "Today's cost? (Y/n): " "YYYY-MM-DD: "
-            echo $date
             echo -n "Let look how much you implusively spend: "
             read cost
-            echo $cost
             echo -n "And where: "
             read cate
-            echo $cate
             echo -n "Any more you wanna say: "
             read details
-            echo $details
+            echo
             insert_entry $income $cost "$cate" "$details" $date
-            if [ $? ]
+            if [ $? -ne 0 ]
             then
                 echo "Sorry cannot do that, there must be something wrong."
             else
@@ -180,15 +177,18 @@ while [ 1 ]; do
             ;;
         "D")
             get_date "Still today? (Y/n): " "YYYY-MM-DD: "
+            echo
             total=`daily_stat $date`
             echo "How could you spend ￥$total a day!!!"
             ;;
         "M")
             if [ -z "`which $GNUPLOT`" ]
             then
+                echo
                 echo "Sorry, if you want this, install $GNUPLOT first please :)"
             else
                 get_date "This month? (Y/n): " "YYYY-MM: "
+                echo
                 data=`monthly_stat $date | sed -n 's/|/ /gp'`
                 echo $data | gnuplot -p -e \
                     'plot "-" using 1:2 title "monthly statistics" with lines' 2>/dev/null &
@@ -197,10 +197,12 @@ while [ 1 ]; do
         "Y")
             if [ -z "`which $GNUPLOT`" ]
             then
+                echo
                 echo "Sorry, if you want this, install $GNUPLOT first please :)"
             else
                 get_date "This year? (Y/n): " "YYYY: "
-                data=`yearly-stat $date | sed -n 's/|/ /gp'`
+                echo
+                data=`yearly_stat $date | sed -n 's/|/ /gp'`
                 echo $data | gnuplot -p -e \
                     'plot "-" using 2:xticlabels(1) title "monthly statistics" with lines' 2>/dev/null &
             fi
@@ -208,8 +210,9 @@ while [ 1 ]; do
         "R")
             echo -n "OK OK, what's it: "
             read category
+            echo
             error=`$DBMS $DBPATH "INSERT INTO categories VALUES('$category');"`
-            if [ $? ]
+            if [ $? -ne 0 ]
             then
                 echo "Man, you did something stupid. Maybe the category has already been there."
                 echo "Sorry can't do it."
@@ -217,7 +220,22 @@ while [ 1 ]; do
                 echo "Here you go."
             fi
             ;;
+        "S")
+            cates=(`$DBMS $DBPATH "SELECT category FROM categories;"`)
+            if [ $? -ne 0 ]
+            then
+                echo "I cannot figure out, either."
+            else
+                echo "So many categories:"
+                for (( i=0; i < ${#cates[@]}; i++ ))
+                do
+                    echo -n "$i) "
+                    echo ${cates[$i]}
+                done
+            fi
+            ;;
         "Q")
+            echo "Bye!"
             break
             ;;
         "*")
