@@ -8,7 +8,7 @@ function usage {
 echo -n "Have you accounted today?(y/N): "
 read ACC
 # capitalize user input
-echo $ACC | tr '[:lower:]' '[:upper:]'
+ACC=`echo $ACC | tr '[:lower:]' '[:upper:]'`
 
 if [ -z "$ACC" -o "$ACC" = "N" ]; then
     acctd
