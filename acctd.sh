@@ -90,9 +90,19 @@ function monthly_stat {
     year=${darr[0]}
     month=${MONTHSTRING[${darr[1]}]}
 
-    echo `$DBMS $DBPATH "SELECT day, SUM(cost) FROM account \
-                         WHERE year=$year AND month='$month' \
-                         GROUP BY day;"`
+    printf "`$DBMS $DBPATH "SELECT day, SUM(cost) FROM account \
+                            WHERE year=$year AND month='$month' \
+                            GROUP BY day;"`"
+}
+
+function monthly_profit {
+    date=$1
+    darr=(`echo $date | sed -n 's/-/ /gp'`)
+    year=${darr[0]}
+    month=${MONTHSTRING[${darr[1]}]}
+
+    echo `$DBMS $DBPATH "SELECT SUM(income), SUM(cost) FROM account \
+                         WHERE year=$year AND month='$month';"`
 }
 
 function yearly_stat {
@@ -100,9 +110,18 @@ function yearly_stat {
     darr=(`echo $date | sed -n 's/-/ /gp'`)
     year=${darr[0]}
 
-    echo `$DBMS $DBPATH "SELECT month, SUM(cost) FROM account \
-                         WHERE year=$year \
-                         GROUP BY month;"`
+    printf `$DBMS $DBPATH "SELECT month, SUM(cost) FROM account \
+                           WHERE year=$year \
+                           GROUP BY month;"`
+}
+
+function yearly_profit {
+    date=$1
+    darr=(`echo $date | sed -n 's/-/ /gp'`)
+    year=${darr[0]}
+
+    echo `$DBMS $DBPATH "SELECT SUM(income), SUM(cost) FROM account \
+                         WHERE year=$year;"`
 }
 
 function get_date {
@@ -190,8 +209,13 @@ while [ 1 ]; do
                 get_date "This month? (Y/n): " "YYYY-MM: "
                 echo
                 data=`monthly_stat $date | sed -n 's/|/ /gp'`
-                echo $data | gnuplot -p -e \
+                printf "$data" | gnuplot -p -e \
                     'plot "-" using 1:2 title "monthly statistics" with lines' 2>/dev/null &
+                profit=(`monthly_profit $date | sed -n 's/|/ /gp'`)
+                income=${profit[0]/.*}
+                cost=${profit[1]/.*}
+                echo -e "Income: ￥$income\tCost: ￥$cost"
+                echo "Profit: ￥$(( $income - $cost ))"
             fi
             ;;
         "Y")
@@ -203,8 +227,13 @@ while [ 1 ]; do
                 get_date "This year? (Y/n): " "YYYY: "
                 echo
                 data=`yearly_stat $date | sed -n 's/|/ /gp'`
-                echo $data | gnuplot -p -e \
+                printf "$data" | gnuplot -p -e \
                     'plot "-" using 2:xticlabels(1) title "monthly statistics" with lines' 2>/dev/null &
+                profit=(`yearly_profit $date | sed -n 's/|/ /gp'`)
+                income=${profit[0]/.*}
+                cost=${profit[1]/.*}
+                echo -e "Income: ￥$income\tCost: ￥$cost"
+                echo "Profit: ￥$(( $income - $cost ))"
             fi
             ;;
         "R")
