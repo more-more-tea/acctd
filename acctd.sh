@@ -62,8 +62,8 @@ function insert_entry {
     date=$5
     darr=(`echo $date | sed -n 's/-/ /gp'`)
     year=${darr[0]}
-    month=${MONTHSTRING[${darr[1]}]}
-    day=${darr[2]}
+    month=${MONTHSTRING[$(expr ${darr[1]} + 0)]}
+    day=$(expr ${darr[2]} + 0)
 
     `$DBMS $DBPATH \
          "INSERT INTO account \
@@ -76,8 +76,8 @@ function daily_stat {
     date=$1
     darr=(`echo $date | sed -n 's/-/ /gp'`)
     year=${darr[0]}
-    month=${MONTHSTRING[${darr[1]}]}
-    day=${darr[2]}
+    month=${MONTHSTRING[$(expr ${darr[1]} + 0)]}
+    day=$(expr ${darr[2]} + 0)
 
     echo `$DBMS $DBPATH "SELECT SUM(cost) FROM account \
                          WHERE year=$year AND\
@@ -88,7 +88,7 @@ function monthly_stat {
     date=$1
     darr=(`echo $date | sed -n 's/-/ /gp'`)
     year=${darr[0]}
-    month=${MONTHSTRING[${darr[1]}]}
+    month=${MONTHSTRING[$(expr ${darr[1]} + 0)]}
 
     printf "`$DBMS $DBPATH "SELECT day, SUM(cost) FROM account \
                             WHERE year=$year AND month='$month' \
@@ -99,7 +99,7 @@ function monthly_profit {
     date=$1
     darr=(`echo $date | sed -n 's/-/ /gp'`)
     year=${darr[0]}
-    month=${MONTHSTRING[${darr[1]}]}
+    month=${MONTHSTRING[$(expr ${darr[1]} + 0)]}
 
     echo `$DBMS $DBPATH "SELECT SUM(income), SUM(cost) FROM account \
                          WHERE year=$year AND month='$month';"`
